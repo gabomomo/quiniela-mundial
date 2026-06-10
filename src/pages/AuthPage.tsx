@@ -159,8 +159,11 @@ export default function AuthPage() {
           </form>
         </div>
 
-        <p className="text-center text-white/30 text-xs mt-6">
-          Quiniela Mundial 2026 · {new Date().getFullYear()}
+        <p className="text-center text-white/20 text-xs mt-6">
+          Desarrollado por{' '}
+          <a href="https://momo.cr" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">
+            Momo Studios
+          </a>
         </p>
       </div>
     </div>
