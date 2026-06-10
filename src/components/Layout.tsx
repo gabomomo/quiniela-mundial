@@ -26,9 +26,21 @@ export default function Layout({ children }: Props) {
       </header>
 
       {/* Content */}
-      <main className="flex-1 pb-24">
+      <main className="flex-1 pb-32">
         {children}
       </main>
+
+      {/* Footer */}
+      <div className="fixed bottom-[60px] left-1/2 -translate-x-1/2 w-full max-w-lg text-center py-1.5 bg-[#0A1628]/95">
+        <a
+          href="https://momo.cr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white/20 hover:text-white/50 text-xs transition-colors"
+        >
+          Desarrollado por Momo Studios
+        </a>
+      </div>
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-[#0A1628]/95 backdrop-blur border-t border-white/10">
