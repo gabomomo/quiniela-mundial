@@ -1,34 +1,25 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY') ?? '';
+const FOOTBALL_DATA_KEY = Deno.env.get('FOOTBALL_DATA_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-// API-Football: World Cup 2026 = league 1, season 2026
-const LEAGUE_ID = 1;
-const SEASON = 2026;
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-// Normaliza nombres de equipos para comparar
 function normalize(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]/g, '');
+  return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
-// Mapeo de nombres del API a nuestros team IDs
+// Mapeo de nombres de football-data.org a nuestros team IDs
 const TEAM_NAME_MAP: Record<string, string> = {
   mexico: 'mex',
   'south africa': 'rsa',
   'korea republic': 'kor',
   'south korea': 'kor',
-  'czech republic': 'cze',
   czechia: 'cze',
+  'czech republic': 'cze',
   canada: 'can',
-  'bosnia': 'bih',
+  'bosnia-herzegovina': 'bih',
   'bosnia and herzegovina': 'bih',
   qatar: 'qat',
   switzerland: 'sui',
@@ -37,17 +28,14 @@ const TEAM_NAME_MAP: Record<string, string> = {
   haiti: 'hai',
   scotland: 'sco',
   'united states': 'usa',
-  usa: 'usa',
   paraguay: 'par',
   australia: 'aus',
   turkey: 'tur',
   germany: 'ger',
   curacao: 'cur',
   'ivory coast': 'civ',
-  "cote d'ivoire": 'civ',
   ecuador: 'ecu',
   netherlands: 'ned',
-  holland: 'ned',
   japan: 'jpn',
   sweden: 'swe',
   tunisia: 'tun',
@@ -57,6 +45,7 @@ const TEAM_NAME_MAP: Record<string, string> = {
   'new zealand': 'nzl',
   spain: 'esp',
   'cape verde': 'cpv',
+  'cape verde islands': 'cpv',
   'saudi arabia': 'ksa',
   uruguay: 'uru',
   france: 'fra',
@@ -69,7 +58,7 @@ const TEAM_NAME_MAP: Record<string, string> = {
   jordan: 'jor',
   portugal: 'por',
   'dr congo': 'cod',
-  'congo dr': 'cod',
+  'congo, dr': 'cod',
   uzbekistan: 'uzb',
   colombia: 'col',
   england: 'eng',
@@ -78,13 +67,11 @@ const TEAM_NAME_MAP: Record<string, string> = {
   panama: 'pan',
 };
 
-function resolveTeamId(apiName: string): string | null {
-  const key = normalize(apiName);
-  // Búsqueda exacta primero
+function resolveTeamId(name: string): string | null {
+  const key = normalize(name);
   for (const [mapKey, id] of Object.entries(TEAM_NAME_MAP)) {
     if (normalize(mapKey) === key) return id;
   }
-  // Búsqueda parcial
   for (const [mapKey, id] of Object.entries(TEAM_NAME_MAP)) {
     if (key.includes(normalize(mapKey)) || normalize(mapKey).includes(key)) return id;
   }
@@ -92,27 +79,21 @@ function resolveTeamId(apiName: string): string | null {
 }
 
 Deno.serve(async (req) => {
-  // Permitir llamadas desde cron (sin auth header)
   if (req.method !== 'POST' && req.method !== 'GET') {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  if (!RAPIDAPI_KEY) {
-    return new Response(JSON.stringify({ error: 'RAPIDAPI_KEY not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+  if (!FOOTBALL_DATA_KEY) {
+    return new Response(JSON.stringify({ error: 'FOOTBALL_DATA_KEY not configured' }), {
+      status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
 
   try {
-    // 1. Obtener fixtures del Mundial 2026 desde API-Football (v3.football.api-sports.io)
+    // 1. Obtener todos los partidos del Mundial 2026
     const apiRes = await fetch(
-      `https://v3.football.api-sports.io/fixtures?league=${LEAGUE_ID}&season=${SEASON}`,
-      {
-        headers: {
-          'x-apisports-key': RAPIDAPI_KEY,
-        },
-      }
+      'https://api.football-data.org/v4/competitions/WC/matches?season=2026',
+      { headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY } }
     );
 
     if (!apiRes.ok) {
@@ -120,18 +101,18 @@ Deno.serve(async (req) => {
     }
 
     const apiData = await apiRes.json();
-    const fixtures = apiData.response ?? [];
+    const fixtures = apiData.matches ?? [];
 
     if (fixtures.length === 0) {
-      return new Response(JSON.stringify({ message: 'No fixtures found', total: 0 }), {
+      return new Response(JSON.stringify({ message: 'No matches found' }), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // 2. Obtener nuestros partidos de la BD
+    // 2. Obtener nuestros partidos
     const { data: ourMatches, error: matchError } = await supabase
       .from('matches')
-      .select('id, home_team_id, away_team_id, match_date, status, stage');
+      .select('id, home_team_id, away_team_id, status');
 
     if (matchError) throw matchError;
 
@@ -139,19 +120,17 @@ Deno.serve(async (req) => {
     let skipped = 0;
     const errors: string[] = [];
 
-    // 3. Para cada fixture terminado o en vivo, buscar y actualizar nuestro partido
+    // 3. Procesar cada partido de la API
     for (const fixture of fixtures) {
-      const fixtureStatus = fixture.fixture?.status?.short;
-      // Solo procesar partidos en vivo o terminados
-      if (!['FT', 'AET', 'PEN', '1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE'].includes(fixtureStatus)) {
-        continue;
-      }
+      const apiStatus: string = fixture.status; // TIMED, SCHEDULED, IN_PLAY, PAUSED, FINISHED, SUSPENDED, POSTPONED
 
-      const homeApiName: string = fixture.teams?.home?.name ?? '';
-      const awayApiName: string = fixture.teams?.away?.name ?? '';
-      const homeGoals: number | null = fixture.goals?.home ?? null;
-      const awayGoals: number | null = fixture.goals?.away ?? null;
-      const fixtureDate: string = fixture.fixture?.date ?? '';
+      // Solo procesar los que están en juego o terminados
+      if (!['IN_PLAY', 'PAUSED', 'FINISHED'].includes(apiStatus)) continue;
+
+      const homeApiName: string = fixture.homeTeam?.name ?? '';
+      const awayApiName: string = fixture.awayTeam?.name ?? '';
+      const homeGoals: number | null = fixture.score?.fullTime?.home ?? fixture.score?.halfTime?.home ?? null;
+      const awayGoals: number | null = fixture.score?.fullTime?.away ?? fixture.score?.halfTime?.away ?? null;
 
       if (homeGoals === null || awayGoals === null) continue;
 
@@ -159,65 +138,38 @@ Deno.serve(async (req) => {
       const awayId = resolveTeamId(awayApiName);
 
       if (!homeId || !awayId) {
-        errors.push(`No se pudo mapear: ${homeApiName} vs ${awayApiName}`);
+        errors.push(`Sin mapeo: ${homeApiName} vs ${awayApiName}`);
         continue;
       }
 
-      // Buscar partido coincidente por equipos
-      const match = ourMatches?.find(
-        (m) => m.home_team_id === homeId && m.away_team_id === awayId
-      );
+      const match = ourMatches?.find(m => m.home_team_id === homeId && m.away_team_id === awayId);
+      if (!match) { skipped++; continue; }
 
-      if (!match) {
-        skipped++;
-        continue;
-      }
+      const newStatus = apiStatus === 'FINISHED' ? 'finished' : 'live';
 
-      // Determinar status
-      const isFinished = ['FT', 'AET', 'PEN'].includes(fixtureStatus);
-      const isLive = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE'].includes(fixtureStatus);
-      const newStatus = isFinished ? 'finished' : isLive ? 'live' : 'scheduled';
-
-      // No sobreescribir si ya está terminado y los goles no cambiaron
-      if (
-        match.status === 'finished' &&
-        newStatus === 'finished'
-      ) {
-        skipped++;
-        continue;
-      }
+      // No reescribir si ya está finalizado
+      if (match.status === 'finished' && newStatus === 'finished') { skipped++; continue; }
 
       const { error: updateError } = await supabase
         .from('matches')
-        .update({
-          home_score: homeGoals,
-          away_score: awayGoals,
-          status: newStatus,
-        })
+        .update({ home_score: homeGoals, away_score: awayGoals, status: newStatus })
         .eq('id', match.id);
 
       if (updateError) {
-        errors.push(`Error actualizando ${homeApiName} vs ${awayApiName}: ${updateError.message}`);
+        errors.push(`Error ${homeApiName} vs ${awayApiName}: ${updateError.message}`);
       } else {
         updated++;
       }
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        fixtures_from_api: fixtures.length,
-        updated,
-        skipped,
-        errors,
-      }),
+      JSON.stringify({ success: true, fixtures_from_api: fixtures.length, updated, skipped, errors }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   } catch (err) {
     console.error(err);
     return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
 });

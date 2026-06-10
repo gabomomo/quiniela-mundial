@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { LogOut, Trophy, Target, ShieldCheck } from 'lucide-react';
+import { LogOut, Trophy, Target } from 'lucide-react';
 
 interface Stats {
   total_predictions: number;
@@ -13,7 +12,6 @@ interface Stats {
 
 export default function ProfilePage() {
   const { player, logout } = useAuth();
-  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [rank, setRank] = useState<number | null>(null);
 
@@ -103,17 +101,7 @@ export default function ProfilePage() {
         <p>• Los puntos se actualizan al finalizar cada partido</p>
       </div>
 
-      {player.is_admin && (
-        <button
-          onClick={() => navigate('/admin')}
-          className="btn-secondary w-full flex items-center justify-center gap-2"
-        >
-          <ShieldCheck size={16} />
-          Panel de Admin
-        </button>
-      )}
-
-      <button
+<button
         onClick={logout}
         className="btn-danger w-full flex items-center justify-center gap-2"
       >
