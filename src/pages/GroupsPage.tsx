@@ -37,6 +37,7 @@ export default function GroupsPage() {
           .eq('player_id', player.id);
         const map: Record<string, Prediction> = {};
         (predData || []).forEach((p: Prediction) => { map[p.match_id] = p; });
+
         setPredictions(map);
       }
       setLoading(false);
