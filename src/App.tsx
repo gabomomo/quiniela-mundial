@@ -5,6 +5,7 @@ import GroupsPage from './pages/GroupsPage';
 import MatchPage from './pages/MatchPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
 import Layout from './components/Layout';
 
 function AppRoutes() {
@@ -30,6 +31,7 @@ function AppRoutes() {
         <Route path="/match/:id" element={<MatchPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/groups" replace />} />
       </Routes>
     </Layout>

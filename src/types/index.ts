@@ -4,6 +4,7 @@ export interface Player {
   email: string;
   pin: string;
   avatar_emoji: string;
+  is_admin: boolean;
   created_at: string;
 }
 

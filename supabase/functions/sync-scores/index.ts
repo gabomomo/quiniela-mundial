@@ -105,13 +105,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // 1. Obtener fixtures del Mundial 2026 desde API-Football
+    // 1. Obtener fixtures del Mundial 2026 desde API-Football (v3.football.api-sports.io)
     const apiRes = await fetch(
-      `https://api-football-v1.p.rapidapi.com/v3/fixtures?league=${LEAGUE_ID}&season=${SEASON}`,
+      `https://v3.football.api-sports.io/fixtures?league=${LEAGUE_ID}&season=${SEASON}`,
       {
         headers: {
-          'x-rapidapi-key': RAPIDAPI_KEY,
-          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+          'x-apisports-key': RAPIDAPI_KEY,
         },
       }
     );
