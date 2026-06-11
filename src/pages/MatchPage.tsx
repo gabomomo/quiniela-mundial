@@ -29,6 +29,7 @@ export default function MatchPage() {
   }, [prediction]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const now = useNow(match ? [match] : []);
 
   if (loading || !match) {
     return (
@@ -38,7 +39,6 @@ export default function MatchPage() {
     );
   }
 
-  const now = useNow([match]);
   const matchDate = parseISO(match.match_date);
   const isLocked = match.status !== 'scheduled' || matchDate <= now;
   const isFinished = match.status === 'finished';
