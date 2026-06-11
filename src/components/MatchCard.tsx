@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { format, parseISO, isPast } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { MapPin, Clock } from 'lucide-react';
 import type { Match } from '../types';
+import { useNow } from '../hooks/useNow';
 
 interface Props {
   match: Match;
@@ -11,8 +12,9 @@ interface Props {
 
 export default function MatchCard({ match, prediction }: Props) {
   const navigate = useNavigate();
+  const now = useNow([match]);
   const matchDate = parseISO(match.match_date);
-  const isLocked = match.status !== 'scheduled' || isPast(matchDate);
+  const isLocked = match.status !== 'scheduled' || matchDate <= now;
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
 

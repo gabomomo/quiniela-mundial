@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, parseISO, isPast } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ArrowLeft, MapPin, Calendar, Clock, Lock, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useMatch, useMatchPredictions, usePlayerPrediction } from '../hooks/useMatches';
+import { useNow } from '../hooks/useNow';
 import { STAGE_LABELS } from '../data/worldcup2026';
 
 export default function MatchPage() {
@@ -37,8 +38,9 @@ export default function MatchPage() {
     );
   }
 
+  const now = useNow([match]);
   const matchDate = parseISO(match.match_date);
-  const isLocked = match.status !== 'scheduled' || isPast(matchDate);
+  const isLocked = match.status !== 'scheduled' || matchDate <= now;
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
 
