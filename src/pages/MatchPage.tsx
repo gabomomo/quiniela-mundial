@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -18,6 +18,14 @@ export default function MatchPage() {
 
   const [homeInput, setHomeInput] = useState('');
   const [awayInput, setAwayInput] = useState('');
+
+  // Cuando carga la predicción existente, inicializar los inputs
+  useEffect(() => {
+    if (prediction && homeInput === '' && awayInput === '') {
+      setHomeInput(String(prediction.home_score));
+      setAwayInput(String(prediction.away_score));
+    }
+  }, [prediction]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -197,7 +205,7 @@ export default function MatchPage() {
                     type="number"
                     min={0}
                     max={20}
-                    value={homeInput !== '' ? homeInput : (prediction?.home_score ?? '')}
+                    value={homeInput}
                     onChange={e => setHomeInput(e.target.value)}
                     placeholder="0"
                     className="input-field text-center text-2xl font-bold h-14"
@@ -210,7 +218,7 @@ export default function MatchPage() {
                     type="number"
                     min={0}
                     max={20}
-                    value={awayInput !== '' ? awayInput : (prediction?.away_score ?? '')}
+                    value={awayInput}
                     onChange={e => setAwayInput(e.target.value)}
                     placeholder="0"
                     className="input-field text-center text-2xl font-bold h-14"
