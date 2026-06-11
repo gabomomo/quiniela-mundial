@@ -32,7 +32,7 @@ function AppRoutes() {
         <Route path="/match/:id" element={<MatchPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-<Route path="*" element={<Navigate to="/groups" replace />} />
+        <Route path="*" element={<Navigate to="/today" replace />} />
       </Routes>
     </Layout>
   );
