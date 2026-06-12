@@ -38,11 +38,19 @@ export default function TodayPage() {
     };
     fetchAll();
 
+    // Realtime
     const sub = supabase
       .channel('today_matches')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchAll)
       .subscribe();
-    return () => { supabase.removeChannel(sub); };
+
+    // Polling cada 30 segundos como respaldo
+    const poll = setInterval(fetchAll, 30_000);
+
+    return () => {
+      supabase.removeChannel(sub);
+      clearInterval(poll);
+    };
   }, [player]);
 
   const todayMatches = matches.filter(m => isToday(parseISO(m.match_date)));

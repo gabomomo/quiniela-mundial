@@ -65,7 +65,12 @@ export function useMatch(matchId: string) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` }, fetch)
       .subscribe();
 
-    return () => { supabase.removeChannel(sub); };
+    const poll = setInterval(fetch, 30_000);
+
+    return () => {
+      supabase.removeChannel(sub);
+      clearInterval(poll);
+    };
   }, [matchId]);
 
   return { match, loading };

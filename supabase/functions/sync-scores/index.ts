@@ -132,8 +132,6 @@ Deno.serve(async (req) => {
       const homeGoals: number | null = fixture.score?.fullTime?.home ?? fixture.score?.halfTime?.home ?? null;
       const awayGoals: number | null = fixture.score?.fullTime?.away ?? fixture.score?.halfTime?.away ?? null;
 
-      if (homeGoals === null || awayGoals === null) continue;
-
       const homeId = resolveTeamId(homeApiName);
       const awayId = resolveTeamId(awayApiName);
 
@@ -147,12 +145,19 @@ Deno.serve(async (req) => {
 
       const newStatus = apiStatus === 'FINISHED' ? 'finished' : 'live';
 
-      // No reescribir si ya está finalizado
-      if (match.status === 'finished' && newStatus === 'finished') { skipped++; continue; }
+      // No reescribir si ya está finalizado con goles
+      if (match.status === 'finished' && newStatus === 'finished' && homeGoals !== null) { skipped++; continue; }
+
+      // Actualizar: si hay goles los incluye, si no solo actualiza el status
+      const updatePayload: Record<string, unknown> = { status: newStatus };
+      if (homeGoals !== null && awayGoals !== null) {
+        updatePayload.home_score = homeGoals;
+        updatePayload.away_score = awayGoals;
+      }
 
       const { error: updateError } = await supabase
         .from('matches')
-        .update({ home_score: homeGoals, away_score: awayGoals, status: newStatus })
+        .update(updatePayload)
         .eq('id', match.id);
 
       if (updateError) {

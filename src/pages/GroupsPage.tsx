@@ -44,6 +44,8 @@ export default function GroupsPage() {
     };
 
     fetchAll();
+    const poll = setInterval(fetchAll, 30_000);
+    return () => clearInterval(poll);
   }, [player]);
 
   const stages = [...new Set(matches.map(m => m.stage))];
