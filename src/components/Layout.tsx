@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, LayoutGrid, BarChart2, User, CalendarDays } from 'lucide-react';
+import { Trophy, LayoutGrid, BarChart2, User, CalendarDays, Shield } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   children: React.ReactNode;
@@ -7,12 +8,14 @@ interface Props {
 
 export default function Layout({ children }: Props) {
   const location = useLocation();
+  const { player } = useAuth();
 
   const nav = [
     { to: '/today', icon: CalendarDays, label: 'Hoy' },
     { to: '/groups', icon: LayoutGrid, label: 'Partidos' },
     { to: '/leaderboard', icon: BarChart2, label: 'Tabla' },
     { to: '/profile', icon: User, label: 'Perfil' },
+    ...(player?.is_admin ? [{ to: '/admin', icon: Shield, label: 'Admin' }] : []),
   ];
 
   return (

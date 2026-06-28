@@ -6,6 +6,7 @@ import MatchPage from './pages/MatchPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import TodayPage from './pages/TodayPage';
+import AdminPage from './pages/AdminPage';
 import Layout from './components/Layout';
 
 function AppRoutes() {
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route path="/match/:id" element={<MatchPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        {player.is_admin && <Route path="/admin" element={<AdminPage />} />}
         <Route path="*" element={<Navigate to="/today" replace />} />
       </Routes>
     </Layout>
