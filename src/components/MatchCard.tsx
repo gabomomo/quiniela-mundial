@@ -14,7 +14,7 @@ export default function MatchCard({ match, prediction }: Props) {
   const navigate = useNavigate();
   const now = useNow([match]);
   const matchDate = parseISO(match.match_date);
-  const isLocked = match.predictions_open ? false : (match.status !== 'scheduled' || matchDate <= now);
+  const isLocked = match.status !== 'scheduled' || matchDate <= now;
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
 

@@ -43,7 +43,7 @@ export default function MatchPage() {
   }
 
   const matchDate = parseISO(match.match_date);
-  const isLocked = match.predictions_open ? false : (match.status !== 'scheduled' || matchDate <= now);
+  const isLocked = match.status !== 'scheduled' || matchDate <= now;
   const isFinished = match.status === 'finished';
   const isLive = match.status === 'live';
   const isKnockout = KNOCKOUT_STAGES.has(match.stage);

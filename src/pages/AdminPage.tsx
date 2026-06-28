@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Shield, CheckCircle, Radio, RotateCcw, Save, LockOpen, Lock } from 'lucide-react';
+import { Shield, CheckCircle, Radio, RotateCcw, Save } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Match } from '../types';
 import { STAGE_LABELS } from '../data/worldcup2026';
@@ -61,13 +61,6 @@ export default function AdminPage() {
       ...prev,
       [matchId]: { ...getEdit(matches.find(m => m.id === matchId)!), ...patch },
     }));
-  };
-
-  const togglePredictions = async (match: Match) => {
-    setSaving(p => ({ ...p, [match.id]: true }));
-    await supabase.from('matches').update({ predictions_open: !match.predictions_open }).eq('id', match.id);
-    setSaving(p => ({ ...p, [match.id]: false }));
-    fetchMatches();
   };
 
   const markLive = async (match: Match) => {
@@ -287,22 +280,6 @@ export default function AdminPage() {
 
               {/* Action buttons */}
               <div className="flex gap-2">
-                {/* Abrir/cerrar predicciones — disponible para partidos pasados sin resultado */}
-                {match.status !== 'finished' && isPast && (
-                  <button
-                    onClick={() => togglePredictions(match)}
-                    disabled={isSaving}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all border ${
-                      match.predictions_open
-                        ? 'bg-green-500/20 border-green-500/30 text-green-400 hover:bg-green-500/30'
-                        : 'bg-white/10 border-white/20 text-white/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {match.predictions_open ? <LockOpen size={13} /> : <Lock size={13} />}
-                    {match.predictions_open ? 'Cerrar apuestas' : 'Abrir apuestas'}
-                  </button>
-                )}
-
                 {match.status !== 'live' && match.status !== 'finished' && isPast && (
                   <button
                     onClick={() => markLive(match)}

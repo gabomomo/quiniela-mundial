@@ -38,7 +38,6 @@ export interface Match {
   home_score: number | null;
   away_score: number | null;
   advancing_team_id: string | null;
-  predictions_open: boolean;
   status: 'scheduled' | 'live' | 'finished';
   // joined
   home_team?: Team;
