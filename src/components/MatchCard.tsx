@@ -74,14 +74,14 @@ export default function MatchCard({ match, prediction }: Props) {
           )}
           {prediction !== null && prediction !== undefined && (
             <div className={`flex items-center gap-1.5 rounded-lg px-2 py-0.5 border ${
-              isFinished && prediction.points === 3 ? 'bg-yellow-500/20 border-yellow-500/40' :
-              isFinished && prediction.points === 1 ? 'bg-green-500/20 border-green-500/40' :
+              isFinished && (prediction.points ?? 0) >= 3 ? 'bg-yellow-500/20 border-yellow-500/40' :
+              isFinished && (prediction.points ?? 0) >= 1 ? 'bg-green-500/20 border-green-500/40' :
               isFinished && prediction.points === 0 ? 'bg-white/5 border-white/10' :
               'bg-blue-600/30 border-blue-500/30'
             }`}>
               <span className={`text-xs font-semibold ${
-                isFinished && prediction.points === 3 ? 'text-yellow-300' :
-                isFinished && prediction.points === 1 ? 'text-green-300' :
+                isFinished && (prediction.points ?? 0) >= 3 ? 'text-yellow-300' :
+                isFinished && (prediction.points ?? 0) >= 1 ? 'text-green-300' :
                 isFinished && prediction.points === 0 ? 'text-white/30' :
                 'text-blue-300'
               }`}>
@@ -89,11 +89,11 @@ export default function MatchCard({ match, prediction }: Props) {
               </span>
               {isFinished && prediction.points !== null && prediction.points !== undefined && (
                 <span className={`text-xs font-black ${
-                  prediction.points === 3 ? 'text-yellow-400' :
-                  prediction.points === 1 ? 'text-green-400' :
+                  (prediction.points ?? 0) >= 3 ? 'text-yellow-400' :
+                  (prediction.points ?? 0) >= 1 ? 'text-green-400' :
                   'text-white/20'
                 }`}>
-                  {prediction.points === 3 ? '+3' : prediction.points === 1 ? '+1' : '0'}
+                  {prediction.points > 0 ? `+${prediction.points}` : '0'}
                 </span>
               )}
             </div>

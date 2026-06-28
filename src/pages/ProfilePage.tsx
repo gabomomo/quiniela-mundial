@@ -25,8 +25,8 @@ export default function ProfilePage() {
 
       if (predsData) {
         const total = predsData.reduce((a, p) => a + (p.points || 0), 0);
-        const exact = predsData.filter(p => p.points === 3).length;
-        const correct = predsData.filter(p => p.points === 1).length;
+        const exact = predsData.filter(p => (p.points ?? 0) >= 3).length;
+        const correct = predsData.filter(p => (p.points ?? 0) >= 1 && (p.points ?? 0) < 3).length;
         setStats({
           total_predictions: predsData.length,
           exact_scores: exact,
