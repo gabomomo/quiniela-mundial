@@ -64,21 +64,8 @@ export default function AuthPage() {
         </div>
 
         <div className="card p-6">
-          {/* Tab toggle */}
-          <div className="flex bg-white/10 rounded-xl p-1 mb-6">
-            <button
-              onClick={() => { setMode('login'); setError(''); resetPin(); }}
-              className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all ${mode === 'login' ? 'bg-blue-600 text-white' : 'text-white/60'}`}
-            >
-              Iniciar Sesión
-            </button>
-            <button
-              onClick={() => { setMode('register'); setError(''); resetPin(); }}
-              className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all ${mode === 'register' ? 'bg-blue-600 text-white' : 'text-white/60'}`}
-            >
-              Registrarse
-            </button>
-          </div>
+          {/* Registro oculto — solo inicio de sesión */}
+          <h2 className="text-center text-white font-bold text-lg mb-6">Iniciar Sesión</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
