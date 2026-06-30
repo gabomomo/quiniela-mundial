@@ -129,8 +129,24 @@ Deno.serve(async (req) => {
 
       const homeApiName: string = fixture.homeTeam?.name ?? '';
       const awayApiName: string = fixture.awayTeam?.name ?? '';
-      const homeGoals: number | null = fixture.score?.fullTime?.home ?? fixture.score?.halfTime?.home ?? null;
-      const awayGoals: number | null = fixture.score?.fullTime?.away ?? fixture.score?.halfTime?.away ?? null;
+
+      // football-data.org: score.fullTime es ACUMULATIVO (90' + tiempo extra + penales).
+      // Para definiciones por penales guardamos el marcador del tiempo regular (empate)
+      // y registramos por separado quién avanzó; nunca el marcador de la tanda de penales.
+      const score = fixture.score ?? {};
+      const duration: string = score.duration ?? 'REGULAR'; // REGULAR | EXTRA_TIME | PENALTY_SHOOTOUT
+      const isShootout = duration === 'PENALTY_SHOOTOUT';
+
+      let homeGoals: number | null;
+      let awayGoals: number | null;
+      if (isShootout) {
+        // 90' (regularTime); si la API no lo trae, restamos los penales del fullTime
+        homeGoals = score.regularTime?.home ?? ((score.fullTime?.home ?? 0) - (score.penalties?.home ?? 0));
+        awayGoals = score.regularTime?.away ?? ((score.fullTime?.away ?? 0) - (score.penalties?.away ?? 0));
+      } else {
+        homeGoals = score.fullTime?.home ?? score.halfTime?.home ?? null;
+        awayGoals = score.fullTime?.away ?? score.halfTime?.away ?? null;
+      }
 
       const homeId = resolveTeamId(homeApiName);
       const awayId = resolveTeamId(awayApiName);
@@ -153,6 +169,12 @@ Deno.serve(async (req) => {
       if (homeGoals !== null && awayGoals !== null) {
         updatePayload.home_score = homeGoals;
         updatePayload.away_score = awayGoals;
+        // Solo en definiciones por penales registramos quién avanzó (el resto se decide por marcador)
+        if (isShootout) {
+          updatePayload.advancing_team_id =
+            score.winner === 'HOME_TEAM' ? homeId :
+            score.winner === 'AWAY_TEAM' ? awayId : null;
+        }
       }
 
       const { error: updateError } = await supabase
