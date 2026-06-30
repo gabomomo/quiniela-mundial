@@ -6,7 +6,7 @@ type Mode = 'login' | 'register';
 
 export default function AuthPage() {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode] = useState<Mode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState(['', '', '', '']);
@@ -45,11 +45,6 @@ export default function AuthPage() {
       : await register(name, email, pinStr, avatar);
     setLoading(false);
     if (result.error) setError(result.error);
-  };
-
-  const resetPin = () => {
-    setPin(['', '', '', '']);
-    pinRefs[0].current?.focus();
   };
 
   return (
