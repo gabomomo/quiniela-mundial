@@ -112,8 +112,8 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* Sin partidos hoy ni próximos */}
-      {todayMatches.length === 0 && upcomingMatches.length === 0 && (
+      {/* Sin partidos hoy */}
+      {todayMatches.length === 0 && (
         <div className="card p-8 text-center">
           <div className="text-5xl mb-3">😴</div>
           <p className="font-semibold text-white">No hay partidos hoy</p>
