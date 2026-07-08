@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, parseISO, isToday, isTomorrow } from 'date-fns';
+import { format, parseISO, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -54,8 +54,15 @@ export default function TodayPage() {
   }, [player]);
 
   const todayMatches = matches.filter(m => isToday(parseISO(m.match_date)));
-  const tomorrowMatches = matches.filter(m => isTomorrow(parseISO(m.match_date)));
   const liveMatches = matches.filter(m => m.status === 'live');
+  // Próximos: partidos programados, a futuro, con equipos ya definidos (no placeholders TBD)
+  const now = new Date();
+  const upcomingMatches = matches.filter(m =>
+    m.status === 'scheduled' &&
+    m.home_team_id && m.away_team_id &&
+    !isToday(parseISO(m.match_date)) &&
+    parseISO(m.match_date) > now
+  );
 
   if (loading) {
     return (
@@ -91,7 +98,7 @@ export default function TodayPage() {
       )}
 
       {/* PARTIDOS DE HOY */}
-      {todayMatches.length > 0 ? (
+      {todayMatches.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-white/70 uppercase tracking-wide">Hoy</h3>
@@ -103,7 +110,10 @@ export default function TodayPage() {
             ))}
           </div>
         </section>
-      ) : (
+      )}
+
+      {/* Sin partidos hoy ni próximos */}
+      {todayMatches.length === 0 && upcomingMatches.length === 0 && (
         <div className="card p-8 text-center">
           <div className="text-5xl mb-3">😴</div>
           <p className="font-semibold text-white">No hay partidos hoy</p>
@@ -111,15 +121,15 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* MAÑANA */}
-      {tomorrowMatches.length > 0 && (
+      {/* PRÓXIMOS PARTIDOS */}
+      {upcomingMatches.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white/40 uppercase tracking-wide">Mañana</h3>
-            <span className="text-xs text-white/30">{tomorrowMatches.length} partido{tomorrowMatches.length !== 1 ? 's' : ''}</span>
+            <h3 className="text-sm font-bold text-white/40 uppercase tracking-wide">Próximos partidos</h3>
+            <span className="text-xs text-white/30">{upcomingMatches.length} partido{upcomingMatches.length !== 1 ? 's' : ''}</span>
           </div>
-          <div className="space-y-3 opacity-70">
-            {tomorrowMatches.map(match => (
+          <div className="space-y-3">
+            {upcomingMatches.map(match => (
               <MatchCard key={match.id} match={match} prediction={predictions[match.id] || null} />
             ))}
           </div>
